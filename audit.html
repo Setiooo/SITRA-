@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SITRA-PIP | Audit Trail & Log Keputusan</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0f1923;--ink2:#1a2636;--paper:#f0ece2;--accent:#c8451a;--safe:#22c55e;--warn:#f59e0b;--muted:#6b7a8d;--border:rgba(255,255,255,0.08);}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:"Instrument Sans",sans-serif;background:var(--ink);color:var(--paper);min-height:100vh;overflow-x:hidden;}
+body::before{content:"";position:fixed;inset:0;background:radial-gradient(ellipse 70% 50% at 80% 20%,rgba(200,69,26,0.07),transparent 60%),radial-gradient(ellipse 50% 40% at 20% 80%,rgba(26,122,74,0.05),transparent 50%);pointer-events:none;z-index:0;}
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:255px;background:var(--ink2);border-right:1px solid var(--border);z-index:100;display:flex;flex-direction:column;}
+.brand-area{padding:24px 20px 18px;border-bottom:1px solid var(--border);}
+.brand-row{display:flex;align-items:center;gap:12px;margin-bottom:6px;}
+.brand-icon{width:38px;height:38px;background:var(--accent);border-radius:9px;display:flex;align-items:center;justify-content:center;font-family:"DM Serif Display",serif;font-size:17px;color:#fff;font-weight:bold;}
+.brand-name{font-family:"DM Serif Display",serif;font-size:1.3rem;color:var(--paper);}
+.brand-sub{font-size:0.68rem;color:var(--muted);letter-spacing:0.04em;line-height:1.5;}
+.nav{padding:14px 10px;flex:1;overflow-y:auto;}
+.nav-section{font-size:0.62rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);padding:8px 12px 5px;}
+.nav-item{display:flex;align-items:center;gap:11px;padding:10px 13px;border-radius:7px;cursor:pointer;color:rgba(240,236,226,0.55);font-size:0.85rem;font-weight:500;margin-bottom:2px;text-decoration:none;transition:all 0.18s;}
+.nav-item:hover{background:rgba(255,255,255,0.05);color:var(--paper);}
+.nav-item.active{background:rgba(200,69,26,0.16);color:var(--paper);border-left:3px solid var(--accent);padding-left:10px;}
+.nav-badge{margin-left:auto;background:var(--accent);color:#fff;font-size:0.62rem;padding:2px 7px;border-radius:20px;font-weight:700;}
+.sidebar-foot{padding:14px 18px;border-top:1px solid var(--border);font-size:0.68rem;color:var(--muted);line-height:1.6;}
+.sidebar-foot strong{color:rgba(240,236,226,0.45);display:block;}
+.main{margin-left:255px;min-height:100vh;position:relative;z-index:1;}
+.topbar{height:62px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 30px;background:rgba(15,25,35,0.85);backdrop-filter:blur(10px);position:sticky;top:0;z-index:50;}
+.topbar-left{display:flex;flex-direction:column;}
+.tb-title{font-size:0.95rem;font-weight:600;color:var(--paper);}
+.tb-crumb{font-size:0.68rem;color:var(--muted);font-family:"DM Mono",monospace;}
+.topbar-right{display:flex;align-items:center;gap:14px;}
+.sys-pill{display:flex;align-items:center;gap:7px;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.25);color:#4ade80;padding:5px 13px;border-radius:30px;font-size:0.72rem;font-family:"DM Mono",monospace;}
+.sys-dot{width:6px;height:6px;background:#4ade80;border-radius:50%;animation:blink 2s infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0.4;}}
+.time-display{font-family:"DM Mono",monospace;font-size:0.75rem;color:var(--muted);}
+.content{padding:28px 30px;}
+.disclaimer{background:rgba(200,69,26,0.07);border:1px solid rgba(200,69,26,0.2);border-left:4px solid var(--accent);border-radius:8px;padding:12px 16px;margin-bottom:26px;display:flex;align-items:flex-start;gap:10px;}
+.disc-p{font-size:0.75rem;color:rgba(240,236,226,0.6);line-height:1.5;}
+.disc-p strong{color:var(--accent);}
+.sec-hdr{display:flex;align-items:baseline;gap:10px;margin-bottom:18px;}
+.sec-title{font-family:"DM Serif Display",serif;font-size:1.2rem;color:var(--paper);}
+.sec-line{flex:1;height:1px;background:rgba(255,255,255,0.06);}
+.sec-meta{font-size:0.68rem;color:var(--muted);font-family:"DM Mono",monospace;}
+.top-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:24px;}
+.info-card{background:var(--ink2);border:1px solid var(--border);border-radius:11px;padding:18px 20px;}
+.ic-label{font-size:0.68rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--muted);margin-bottom:8px;}
+.ic-val{font-family:"DM Mono",monospace;font-size:1.55rem;font-weight:500;color:var(--paper);line-height:1;margin-bottom:6px;}
+.ic-val.c-safe{color:var(--safe);}
+.ic-val.c-warn{color:var(--warn);}
+.ic-val.c-accent{color:var(--accent);}
+.ic-sub{font-size:0.68rem;color:var(--muted);}
+.controls-row{display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap;}
+.c-input{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:7px;padding:8px 13px;color:var(--paper);font-family:"Instrument Sans",sans-serif;font-size:0.82rem;outline:none;transition:border-color 0.18s;}
+.c-input:focus{border-color:var(--accent);}
+.c-input::placeholder{color:var(--muted);}
+.c-select{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:7px;padding:8px 12px;color:var(--paper);font-family:"Instrument Sans",sans-serif;font-size:0.82rem;outline:none;cursor:pointer;appearance:none;padding-right:28px;}
+.c-btn{background:var(--accent);border:none;border-radius:7px;padding:8px 16px;color:#fff;font-size:0.8rem;font-weight:600;cursor:pointer;font-family:"Instrument Sans",sans-serif;transition:background 0.15s;}
+.c-btn:hover{background:#a83716;}
+.c-btn-ghost{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:7px;padding:8px 14px;color:var(--paper);font-size:0.8rem;font-weight:500;cursor:pointer;font-family:"Instrument Sans",sans-serif;transition:all 0.15s;}
+.c-btn-ghost:hover{background:rgba(255,255,255,0.1);}
+.main-log-grid{display:grid;grid-template-columns:1fr 340px;gap:18px;margin-bottom:22px;}
+.card{background:var(--ink2);border:1px solid var(--border);border-radius:13px;overflow:hidden;}
+.card-hdr{padding:16px 20px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.card-title{font-weight:600;font-size:0.88rem;color:var(--paper);}
+.card-act{font-size:0.7rem;color:var(--accent);cursor:pointer;font-weight:500;text-decoration:none;}
+.card-act:hover{text-decoration:underline;}
+.card-body{padding:18px 20px;}
+.log-entry{border:1px solid rgba(255,255,255,0.06);border-radius:9px;margin-bottom:10px;overflow:hidden;transition:border-color 0.15s;cursor:pointer;}
+.log-entry:hover{border-color:rgba(200,69,26,0.25);}
+.log-header{display:flex;align-items:center;gap:12px;padding:12px 14px;background:rgba(255,255,255,0.02);}
+.log-type{flex-shrink:0;}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:0.63rem;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;}
+.b-ok{background:rgba(34,197,94,0.15);color:#4ade80;border:1px solid rgba(74,222,128,0.18);}
+.b-warn{background:rgba(245,158,11,0.12);color:#fbbf24;border:1px solid rgba(251,191,36,0.18);}
+.b-err{background:rgba(200,69,26,0.15);color:#f87171;border:1px solid rgba(248,113,113,0.18);}
+.b-blue{background:rgba(96,165,250,0.12);color:#93c5fd;border:1px solid rgba(147,197,253,0.18);}
+.badge-dot{width:5px;height:5px;border-radius:50%;background:currentColor;}
+.log-info{flex:1;min-width:0;}
+.log-title{font-size:0.82rem;font-weight:600;color:var(--paper);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.log-id{font-family:"DM Mono",monospace;font-size:0.65rem;color:var(--muted);}
+.log-meta{flex-shrink:0;text-align:right;}
+.log-time{font-family:"DM Mono",monospace;font-size:0.65rem;color:var(--muted);margin-bottom:3px;}
+.log-user{font-size:0.68rem;color:var(--muted);}
+.log-body{padding:10px 14px 12px;border-top:1px solid rgba(255,255,255,0.04);}
+.log-fields{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.lf-item{display:flex;flex-direction:column;gap:2px;}
+.lf-label{font-size:0.62rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);}
+.lf-val{font-family:"DM Mono",monospace;font-size:0.72rem;color:rgba(240,236,226,0.75);}
+.log-reason{margin-top:8px;padding:8px 10px;background:rgba(255,255,255,0.03);border-radius:5px;border:1px solid rgba(255,255,255,0.05);font-size:0.72rem;color:var(--muted);line-height:1.5;}
+.log-reason strong{color:rgba(240,236,226,0.55);display:block;margin-bottom:2px;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.05em;}
+.expand-indicator{font-size:0.65rem;color:var(--muted);margin-left:auto;flex-shrink:0;padding:2px 6px;background:rgba(255,255,255,0.04);border-radius:4px;}
+.detail-panel{display:flex;flex-direction:column;gap:14px;}
+.dp-card{background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:9px;padding:14px 16px;}
+.dp-title{font-size:0.75rem;font-weight:600;color:var(--paper);margin-bottom:10px;display:flex;align-items:center;gap:7px;}
+.dp-icon{font-size:0.9rem;}
+.timeline{display:flex;flex-direction:column;gap:0;}
+.tl-item{display:flex;gap:11px;}
+.tl-left{display:flex;flex-direction:column;align-items:center;width:22px;flex-shrink:0;}
+.tl-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:3px;}
+.tl-dot.d-ok{background:var(--safe);}
+.tl-dot.d-warn{background:var(--warn);}
+.tl-dot.d-err{background:var(--accent);}
+.tl-dot.d-blue{background:#60a5fa;}
+.tl-line{width:1px;flex:1;background:rgba(255,255,255,0.06);min-height:14px;margin:0 auto;}
+.tl-content{padding-bottom:14px;flex:1;}
+.tl-title{font-size:0.78rem;font-weight:600;color:var(--paper);margin-bottom:1px;}
+.tl-desc{font-size:0.68rem;color:var(--muted);line-height:1.4;}
+.tl-time{font-size:0.62rem;font-family:"DM Mono",monospace;color:var(--muted);margin-top:3px;}
+.hash-box{background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.06);border-radius:6px;padding:10px 12px;font-family:"DM Mono",monospace;font-size:0.65rem;color:rgba(240,236,226,0.4);word-break:break-all;line-height:1.5;}
+.hash-label{font-size:0.62rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--muted);margin-bottom:5px;}
+.chain-list{display:flex;flex-direction:column;gap:8px;}
+.chain-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:6px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);font-size:0.72rem;}
+.chain-num{width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;font-family:"DM Mono",monospace;font-size:0.65rem;color:var(--muted);flex-shrink:0;}
+.chain-info{flex:1;}
+.chain-act{font-weight:600;color:var(--paper);font-size:0.73rem;}
+.chain-sub{font-size:0.65rem;color:var(--muted);}
+.chain-status{flex-shrink:0;}
+.banding-form{display:flex;flex-direction:column;gap:10px;margin-top:4px;}
+.bf-field{display:flex;flex-direction:column;gap:4px;}
+.bf-label{font-size:0.68rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);}
+.bf-input{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);border-radius:6px;padding:8px 11px;color:var(--paper);font-family:"Instrument Sans",sans-serif;font-size:0.8rem;outline:none;transition:border-color 0.18s;}
+.bf-input:focus{border-color:var(--accent);}
+.bf-textarea{resize:vertical;min-height:70px;font-size:0.78rem;line-height:1.4;}
+.bf-submit{background:var(--accent);border:none;border-radius:6px;padding:9px 16px;color:#fff;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:"Instrument Sans",sans-serif;transition:background 0.15s;width:100%;}
+.bf-submit:hover{background:#a83716;}
+.pagination{display:flex;align-items:center;gap:6px;margin-top:14px;justify-content:center;}
+.pg-btn{width:32px;height:32px;border-radius:6px;border:1px solid rgba(255,255,255,0.09);background:rgba(255,255,255,0.04);color:var(--muted);font-size:0.78rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s;font-family:"DM Mono",monospace;}
+.pg-btn:hover{border-color:var(--accent);color:var(--paper);}
+.pg-btn.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+.iso-note{margin-top:14px;padding:10px 12px;background:rgba(34,197,94,0.05);border:1px solid rgba(34,197,94,0.15);border-radius:7px;font-size:0.7rem;color:rgba(240,236,226,0.55);line-height:1.5;}
+.iso-note strong{color:rgba(34,197,94,0.7);}
+.page-foot{text-align:center;padding:18px 0 6px;font-size:0.68rem;color:rgba(255,255,255,0.18);font-family:"DM Mono",monospace;border-top:1px solid rgba(255,255,255,0.05);}
+.watermark{position:fixed;bottom:18px;right:22px;font-size:0.62rem;color:rgba(255,255,255,0.12);font-family:"DM Mono",monospace;text-align:right;line-height:1.6;pointer-events:none;z-index:200;}
+.watermark strong{display:block;color:rgba(255,255,255,0.22);}
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);border-radius:2px;}
+.hidden{display:none!important;}
+</style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="brand-area">
+    <div class="brand-row">
+      <div class="brand-icon">S</div>
+      <div class="brand-name">SITRA-PIP</div>
+    </div>
+    <div class="brand-sub">Sistem Integritas &amp; Keterlacakan<br>Bantuan Pendidikan · Jawa Timur</div>
+  </div>
+  <nav class="nav">
+    <div class="nav-section">Navigasi Utama</div>
+    <a href="dashboard.html" class="nav-item"><span>📊</span> Dashboard</a>
+    <a href="integrasi.html" class="nav-item"><span>🔗</span> Alur Integrasi Data</a>
+    <a href="audit.html" class="nav-item active"><span>📋</span> Audit Trail &amp; Log <span class="nav-badge">12</span></a>
+    <div class="nav-section" style="margin-top:10px;">Sumber Data</div>
+    <a href="#" class="nav-item"><span>🏛️</span> Verifikasi Dapodik</a>
+    <a href="#" class="nav-item"><span>🪪</span> Validasi Dukcapil</a>
+    <a href="#" class="nav-item"><span>💰</span> Data Kesejahteraan</a>
+    <a href="#" class="nav-item"><span>🏦</span> Bank Penyalur</a>
+    <div class="nav-section" style="margin-top:10px;">Manajemen</div>
+    <a href="#" class="nav-item"><span>⚙️</span> Exception Override</a>
+    <a href="#" class="nav-item"><span>📤</span> Mekanisme Banding</a>
+  </nav>
+  <div class="sidebar-foot">
+    <strong>© 2025 Muhammad Setio Budi</strong>
+    Universitas Mayjen Sungkono<br>
+    Prodi Manajemen · Mojokerto<br>
+    <span style="color:rgba(255,255,255,0.18);display:block;margin-top:2px;">Penelitian Akademik · Simulasi</span>
+  </div>
+</aside>
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <span class="tb-title">Audit Trail &amp; Log Keputusan</span>
+      <span class="tb-crumb">SITRA-PIP / audit / decision-log</span>
+    </div>
+    <div class="topbar-right">
+      <div class="sys-pill"><div class="sys-dot"></div>Log Immutable Aktif</div>
+      <div class="time-display" id="liveTime">--:--:--</div>
+    </div>
+  </div>
+  <div class="content">
+    <div class="disclaimer">
+      <span style="font-size:1rem;flex-shrink:0;margin-top:1px;">🔒</span>
+      <p class="disc-p"><strong>DISCLAIMER:</strong> Halaman ini merupakan simulasi konseptual sistem Audit Trail SITRA-PIP untuk keperluan penelitian akademik. Log yang ditampilkan adalah <strong>data simulasi</strong>. Sistem ini tidak terhubung dengan database resmi pemerintah mana pun.</p>
+    </div>
+    <div class="sec-hdr">
+      <span class="sec-title">Log Keputusan Sistem &amp; Audit Trail</span>
+      <div class="sec-line"></div>
+      <span class="sec-meta">ISO 15489-1:2016 · Immutable Log</span>
+    </div>
+    <div class="top-row">
+      <div class="info-card"><div class="ic-label">Total Entri Log Hari Ini</div><div class="ic-val">1.284</div><div class="ic-sub">Dari seluruh node verifikasi</div></div>
+      <div class="info-card"><div class="ic-label">Perubahan Status Terakhir</div><div class="ic-val c-warn">12</div><div class="ic-sub">Menunggu konfirmasi akhir</div></div>
+      <div class="info-card"><div class="ic-label">Integritas Hash Log</div><div class="ic-val c-safe">Valid</div><div class="ic-sub">SHA-256 · Tidak ada manipulasi</div></div>
+    </div>
+    <div class="controls-row">
+      <input class="c-input" type="text" placeholder="Cari NIK, nama, atau ID log..." id="logSearch" oninput="filterLog()" style="flex:1;min-width:200px;">
+      <select class="c-input c-select" id="statusFilter" onchange="filterLog()">
+        <option value="">Semua Status</option>
+        <option value="eligible">Eligible</option>
+        <option value="pending">Pending</option>
+        <option value="reject">Reject Final</option>
+        <option value="koreksi">Koreksi</option>
+      </select>
+      <select class="c-input c-select" id="sourceFilter" onchange="filterLog()">
+        <option value="">Semua Sumber</option>
+        <option value="dapodik">Dapodik</option>
+        <option value="dukcapil">Dukcapil</option>
+        <option value="bank">Bank Penyalur</option>
+        <option value="engine">Decision Engine</option>
+      </select>
+      <button class="c-btn-ghost" onclick="exportLog()">⬇ Ekspor Log</button>
+    </div>
+    <div class="main-log-grid">
+      <div>
+        <div id="logContainer">
+          <!-- Log entries will be injected here -->
+        </div>
+        <div class="pagination" id="pagination">
+          <button class="pg-btn active">1</button>
+          <button class="pg-btn">2</button>
+          <button class="pg-btn">3</button>
+          <button class="pg-btn">···</button>
+          <button class="pg-btn">128</button>
+        </div>
+        <div class="iso-note"><strong>ISO 15489-1:2016 · Log Management:</strong> Setiap entri log disertai timestamp, identitas pengubah, nilai data sebelum dan sesudah perubahan, serta hash SHA-256 untuk memastikan integritas. Log tidak dapat dihapus atau dimodifikasi tanpa meninggalkan jejak perubahan.</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:16px;">
+        <div class="card">
+          <div class="card-hdr"><span class="card-title">Riwayat Kasus Terpilih</span></div>
+          <div class="card-body">
+            <div class="detail-panel">
+              <div class="dp-card">
+                <div class="dp-title"><span class="dp-icon">👤</span>Siswa: Ahmad Fauzi R.</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:0.72rem;margin-bottom:10px;">
+                  <div><span style="color:var(--muted);font-size:0.63rem;text-transform:uppercase;letter-spacing:0.06em;display:block;">NIK</span><span style="font-family:DM Mono,monospace;color:rgba(240,236,226,0.7);">351X·XXXX·XXXX</span></div>
+                  <div><span style="color:var(--muted);font-size:0.63rem;text-transform:uppercase;letter-spacing:0.06em;display:block;">NISN</span><span style="font-family:DM Mono,monospace;color:rgba(240,236,226,0.7);">1234·5XXX</span></div>
+                  <div><span style="color:var(--muted);font-size:0.63rem;text-transform:uppercase;letter-spacing:0.06em;display:block;">Sekolah</span><span style="font-family:DM Mono,monospace;color:rgba(240,236,226,0.7);">SMPN 3 Sumenep</span></div>
+                  <div><span style="color:var(--muted);font-size:0.63rem;text-transform:uppercase;letter-spacing:0.06em;display:block;">Status Kini</span><span class="badge b-ok"><span class="badge-dot"></span>Eligible</span></div>
+                </div>
+              </div>
+              <div class="dp-card">
+                <div class="dp-title"><span class="dp-icon">🕐</span>Timeline Keputusan</div>
+                <div class="timeline">
+                  <div class="tl-item"><div class="tl-left"><div class="tl-dot d-blue"></div><div class="tl-line"></div></div><div class="tl-content"><div class="tl-title">Input Dapodik</div><div class="tl-desc">Data siswa diinput oleh operator SMPN 3 Sumenep</div><div class="tl-time">2025-03-10 · 08:42:17 WIB</div></div></div>
+                  <div class="tl-item"><div class="tl-left"><div class="tl-dot d-warn"></div><div class="tl-line"></div></div><div class="tl-content"><div class="tl-title">Status Pending</div><div class="tl-desc">Ketidaksesuaian ejaan nama di Dukcapil — "Ahmad Fauzi R" vs "Achmad Fauzi R"</div><div class="tl-time">2025-03-10 · 09:05:03 WIB</div></div></div>
+                  <div class="tl-item"><div class="tl-left"><div class="tl-dot d-blue"></div><div class="tl-line"></div></div><div class="tl-content"><div class="tl-title">Pengajuan Koreksi</div><div class="tl-desc">Sekolah mengajukan dokumen akta kelahiran sebagai bukti koreksi</div><div class="tl-time">2025-03-12 · 10:18:55 WIB</div></div></div>
+                  <div class="tl-item"><div class="tl-left"><div class="tl-dot d-ok"></div></div><div class="tl-content"><div class="tl-title">Eligible — Koreksi Diterima</div><div class="tl-desc">Validasi lintas sistem berhasil. Status diperbarui menjadi Eligible.</div><div class="tl-time">2025-03-13 · 14:30:22 WIB</div></div></div>
+                </div>
+              </div>
+              <div class="dp-card">
+                <div class="dp-title"><span class="dp-icon">🔐</span>Hash Integritas Log</div>
+                <div class="hash-label">SHA-256 · Entry ID: LOG-2025-0310-0842</div>
+                <div class="hash-box">a3f7c8d2e1b94f0a6c2d8e4b7f1a3c9e2d5f8b0a1c4e7d2f5b8a0c3e6d9f2b5a8c1e4d7f0b3a6c9e2d5f8b1a4c7e0d3f6b9a2c5e8d1f4b7a0c3e6d9f2b5</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hdr"><span class="card-title">Ajukan Banding / Koreksi</span></div>
+          <div class="card-body">
+            <div class="banding-form">
+              <div class="bf-field"><label class="bf-label">NIK / NISN Siswa</label><input class="bf-input" type="text" placeholder="16 digit NIK atau 8 digit NISN"></div>
+              <div class="bf-field"><label class="bf-label">ID Log Terkait</label><input class="bf-input" type="text" placeholder="LOG-2025-XXXX-XXXX"></div>
+              <div class="bf-field"><label class="bf-label">Jenis Koreksi</label>
+                <select class="bf-input" style="appearance:none;cursor:pointer;">
+                  <option>Kesalahan ejaan nama</option>
+                  <option>Ketidaksesuaian NIK</option>
+                  <option>Data tanggal lahir salah</option>
+                  <option>Rekening bank tidak aktif</option>
+                  <option>Status ekonomi tidak diperbarui</option>
+                  <option>Lainnya</option>
+                </select>
+              </div>
+              <div class="bf-field"><label class="bf-label">Keterangan</label><textarea class="bf-input bf-textarea" placeholder="Jelaskan ketidaksesuaian yang ditemukan..."></textarea></div>
+              <button class="bf-submit" onclick="submitBanding()">📤 Kirim Pengajuan Banding</button>
+              <div style="font-size:0.65rem;color:var(--muted);text-align:center;line-height:1.4;">Pengajuan akan diproses dalam 3×24 jam. Dokumen pendukung (akta, KK) wajib disertakan.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:22px;">
+      <div class="card-hdr"><span class="card-title">Rantai Verifikasi Lintas Sistem (Chain of Custody)</span><span class="sec-meta" style="color:var(--muted);font-size:0.68rem;">Real-time Tracking</span></div>
+      <div class="card-body">
+        <div class="chain-list">
+          <div class="chain-item"><div class="chain-num">1</div><div class="chain-info"><div class="chain-act">DAPODIK → SITRA Core</div><div class="chain-sub">Transfer data pendidikan siswa · Timestamp + ID Operator wajib</div></div><div class="chain-status"><span class="badge b-ok">Terkirim</span></div></div>
+          <div class="chain-item"><div class="chain-num">2</div><div class="chain-info"><div class="chain-act">SITRA Core → Dukcapil API</div><div class="chain-sub">Validasi NIK lintas sistem kependudukan · Response time &lt; 3 detik</div></div><div class="chain-status"><span class="badge b-ok">Valid</span></div></div>
+          <div class="chain-item"><div class="chain-num">3</div><div class="chain-info"><div class="chain-act">SITRA Core → Data Kesejahteraan</div><div class="chain-sub">Validasi status ekonomi dari DTKS / BDT · Dapat diperbarui kontekstual</div></div><div class="chain-status"><span class="badge b-warn">Pending</span></div></div>
+          <div class="chain-item"><div class="chain-num">4</div><div class="chain-info"><div class="chain-act">Decision Engine → Status Final</div><div class="chain-sub">Eligible / Pending / Reject Final dengan log alasan (reason code)</div></div><div class="chain-status"><span class="badge b-blue">Proses</span></div></div>
+          <div class="chain-item"><div class="chain-num">5</div><div class="chain-info"><div class="chain-act">SITRA Core → Bank Penyalur</div><div class="chain-sub">Trigger pencairan hanya jika status Eligible terkonfirmasi penuh</div></div><div class="chain-status"><span class="badge b-err">Menunggu</span></div></div>
+          <div class="chain-item"><div class="chain-num">6</div><div class="chain-info"><div class="chain-act">Final Decision → Audit Trail</div><div class="chain-sub">Seluruh keputusan tersimpan dalam log immutable SHA-256 · ISO 15489-1:2016</div></div><div class="chain-status"><span class="badge b-ok">Aktif</span></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="page-foot">SITRA-PIP Prototype · Penelitian Akademik · © 2025 Muhammad Setio Budi · Universitas Mayjen Sungkono Mojokerto · Data Simulasi — Bukan Sistem Resmi Pemerintah</div>
+  </div>
+</main>
+<div class="watermark"><strong>© Muhammad Setio Budi</strong>Univ. Mayjen Sungkono · 2025<br>Prodi Manajemen · Simulasi</div>
+
+<script>
+function updateTime(){const n=new Date();document.getElementById("liveTime").textContent=n.toLocaleTimeString("id-ID",{hour:"2-digit",minute:"2-digit",second:"2-digit"})+" WIB";}
+setInterval(updateTime,1000);updateTime();
+
+const logData=[
+  {id:"LOG-2025-0310-0842",status:"eligible",source:"engine",name:"Ahmad Fauzi R.",nik:"3515····",school:"SMPN 3 Sumenep",time:"2025-03-13 14:30",user:"sys-engine-01",reason:"Koreksi ejaan nama berhasil divalidasi lintas Dukcapil. Status diubah dari Pending menjadi Eligible setelah verifikasi dokumen akta kelahiran.",prev:"Pending",curr:"Eligible"},
+  {id:"LOG-2025-0311-1102",status:"pending",source:"dukcapil",name:"Siti Nurhaliza",nik:"3527····",school:"SDN 2 Sampang",time:"2025-03-11 11:02",user:"dukcapil-api",reason:"NIK tidak ditemukan dalam basis data Dukcapil. Kemungkinan kesalahan input digit ke-5 atau perubahan data KK yang belum tersinkronisasi.",prev:"Submitted",curr:"Pending"},
+  {id:"LOG-2025-0309-0915",status:"reject",source:"dapodik",name:"Budi Santoso",nik:"3506····",school:"SMA 1 Probolinggo",time:"2025-03-09 09:15",user:"dapodik-sync",reason:"NISN tercatat ganda di dua sekolah berbeda (SMA 1 dan SMA 4 Probolinggo). Diperlukan klarifikasi satuan pendidikan sebelum status dapat ditetapkan.",prev:"Eligible",curr:"Reject Final"},
+  {id:"LOG-2025-0308-1430",status:"koreksi",source:"engine",name:"Dewi Rahmawati",nik:"3521····",school:"MTs Negeri Tuban",time:"2025-03-08 14:30",user:"sekolah-admin",reason:"Pengajuan koreksi data tanggal lahir oleh operator sekolah. Dokumen akta dan KK telah diunggah. Menunggu validasi Dukcapil.",prev:"Reject Final",curr:"Pending Koreksi"},
+  {id:"LOG-2025-0307-0730",status:"eligible",source:"bank",name:"Rizki Maulana",nik:"3508····",school:"SMK 3 Bangkalan",time:"2025-03-07 07:30",user:"bank-bri-api",reason:"Rekening berhasil diaktifkan setelah sinkronisasi ulang identitas. Dana PIP Rp 450.000 tersalurkan ke rekening yang terverifikasi.",prev:"Pending Bank",curr:"Eligible·Cair"},
+  {id:"LOG-2025-0306-1600",status:"pending",source:"dukcapil",name:"Nurul Hidayah",nik:"3529····",school:"SDN 5 Sumenep",time:"2025-03-06 16:00",user:"dukcapil-api",reason:"Perbedaan nama antara Dapodik (Nurul Hidayah) dan Dukcapil (Nur'ul Hidayah). Sistem membuka status pending — koreksi ejaan apostrophe diperlukan.",prev:"Submitted",curr:"Pending"},
+];
+
+function renderLog(data){
+  const container=document.getElementById("logContainer");
+  container.innerHTML="";
+  data.forEach(log=>{
+    const statusMap={eligible:{cls:"b-ok",text:"Eligible"},pending:{cls:"b-warn",text:"Pending"},reject:{cls:"b-err",text:"Reject Final"},koreksi:{cls:"b-blue",text:"Koreksi"}};
+    const s=statusMap[log.status]||{cls:"b-warn",text:log.status};
+    const sourceIcon={dapodik:"🏛️",dukcapil:"🪪",bank:"🏦",engine:"⚙️"}[log.source]||"📋";
+    container.innerHTML+=`
+    <div class="log-entry" data-status="${log.status}" data-source="${log.source}" data-search="${(log.name+log.nik+log.id).toLowerCase()}">
+      <div class="log-header">
+        <div class="log-type"><span class="badge ${s.cls}"><span class="badge-dot"></span>${s.text}</span></div>
+        <div class="log-info"><div class="log-title">${sourceIcon} ${log.name} — ${log.school}</div><div class="log-id">ID: ${log.id}</div></div>
+        <div class="log-meta"><div class="log-time">${log.time} WIB</div><div class="log-user">via ${log.source}</div></div>
+        <span class="expand-indicator">▼</span>
+      </div>
+      <div class="log-body">
+        <div class="log-fields">
+          <div class="lf-item"><div class="lf-label">NIK (parsial)</div><div class="lf-val">${log.nik}</div></div>
+          <div class="lf-item"><div class="lf-label">Sumber Node</div><div class="lf-val">${log.source.toUpperCase()}</div></div>
+          <div class="lf-item"><div class="lf-label">Status Sebelum</div><div class="lf-val">${log.prev}</div></div>
+          <div class="lf-item"><div class="lf-label">Status Sesudah</div><div class="lf-val">${log.curr}</div></div>
+        </div>
+        <div class="log-reason"><strong>Alasan Keputusan (Reason Code):</strong>${log.reason}</div>
+      </div>
+    </div>`;
+  });
+}
+renderLog(logData);
+
+function filterLog(){
+  const q=document.getElementById("logSearch").value.toLowerCase();
+  const s=document.getElementById("statusFilter").value;
+  const src=document.getElementById("sourceFilter").value;
+  document.querySelectorAll(".log-entry").forEach(el=>{
+    const matchQ=!q||el.dataset.search.includes(q);
+    const matchS=!s||el.dataset.status===s;
+    const matchSrc=!src||el.dataset.source===src;
+    el.style.display=(matchQ&&matchS&&matchSrc)?"":"none";
+  });
+}
+
+function submitBanding(){alert("Simulasi: Pengajuan banding telah diterima sistem SITRA-PIP.\nID Tiket: BAND-2025-'+Math.floor(Math.random()*9000+1000)+'\nAkan diproses dalam 3×24 jam.\n\n[Ini adalah simulasi akademik — bukan sistem resmi]");}
+function exportLog(){alert("Simulasi: Log akan diekspor dalam format CSV/PDF.\nFitur ini tersedia dalam implementasi penuh SITRA-PIP.\n\n[Ini adalah simulasi akademik]");}
+</script>
+</body>
+</html>
