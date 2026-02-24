@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SITRA-PIP | Dashboard Monitoring</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0f1923;--ink2:#1a2636;--paper:#f0ece2;--accent:#c8451a;--safe:#22c55e;--warn:#f59e0b;--muted:#6b7a8d;--border:rgba(255,255,255,0.08);}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:"Instrument Sans",sans-serif;background:var(--ink);color:var(--paper);min-height:100vh;overflow-x:hidden;}
+body::before{content:"";position:fixed;inset:0;background:radial-gradient(ellipse 70% 50% at 20% 10%,rgba(200,69,26,0.08),transparent 60%),radial-gradient(ellipse 50% 40% at 80% 80%,rgba(232,137,26,0.05),transparent 50%);pointer-events:none;z-index:0;}
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:255px;background:var(--ink2);border-right:1px solid var(--border);z-index:100;display:flex;flex-direction:column;}
+.brand-area{padding:24px 20px 18px;border-bottom:1px solid var(--border);}
+.brand-row{display:flex;align-items:center;gap:12px;margin-bottom:6px;}
+.brand-icon{width:38px;height:38px;background:var(--accent);border-radius:9px;display:flex;align-items:center;justify-content:center;font-family:"DM Serif Display",serif;font-size:17px;color:#fff;font-weight:bold;}
+.brand-name{font-family:"DM Serif Display",serif;font-size:1.3rem;color:var(--paper);}
+.brand-sub{font-size:0.68rem;color:var(--muted);letter-spacing:0.04em;line-height:1.5;}
+.nav{padding:14px 10px;flex:1;overflow-y:auto;}
+.nav-section{font-size:0.62rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);padding:8px 12px 5px;}
+.nav-item{display:flex;align-items:center;gap:11px;padding:10px 13px;border-radius:7px;cursor:pointer;color:rgba(240,236,226,0.55);font-size:0.85rem;font-weight:500;margin-bottom:2px;text-decoration:none;transition:all 0.18s;}
+.nav-item:hover{background:rgba(255,255,255,0.05);color:var(--paper);}
+.nav-item.active{background:rgba(200,69,26,0.16);color:var(--paper);border-left:3px solid var(--accent);padding-left:10px;}
+.nav-badge{margin-left:auto;background:var(--accent);color:#fff;font-size:0.62rem;padding:2px 7px;border-radius:20px;font-weight:700;}
+.sidebar-foot{padding:14px 18px;border-top:1px solid var(--border);font-size:0.68rem;color:var(--muted);line-height:1.6;}
+.sidebar-foot strong{color:rgba(240,236,226,0.45);display:block;}
+.main{margin-left:255px;min-height:100vh;position:relative;z-index:1;}
+.topbar{height:62px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 30px;background:rgba(15,25,35,0.85);backdrop-filter:blur(10px);position:sticky;top:0;z-index:50;}
+.topbar-left{display:flex;flex-direction:column;}
+.tb-title{font-size:0.95rem;font-weight:600;color:var(--paper);}
+.tb-crumb{font-size:0.68rem;color:var(--muted);font-family:"DM Mono",monospace;}
+.topbar-right{display:flex;align-items:center;gap:14px;}
+.sys-pill{display:flex;align-items:center;gap:7px;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.25);color:#4ade80;padding:5px 13px;border-radius:30px;font-size:0.72rem;font-family:"DM Mono",monospace;}
+.sys-dot{width:6px;height:6px;background:#4ade80;border-radius:50%;animation:blink 2s infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0.4;}}
+.time-display{font-family:"DM Mono",monospace;font-size:0.75rem;color:var(--muted);}
+.content{padding:28px 30px;}
+.disclaimer{background:rgba(200,69,26,0.07);border:1px solid rgba(200,69,26,0.2);border-left:4px solid var(--accent);border-radius:8px;padding:12px 16px;margin-bottom:26px;display:flex;align-items:flex-start;gap:10px;}
+.disc-p{font-size:0.75rem;color:rgba(240,236,226,0.6);line-height:1.5;}
+.disc-p strong{color:var(--accent);}
+.sec-hdr{display:flex;align-items:baseline;gap:10px;margin-bottom:18px;}
+.sec-title{font-family:"DM Serif Display",serif;font-size:1.2rem;color:var(--paper);}
+.sec-line{flex:1;height:1px;background:rgba(255,255,255,0.06);}
+.sec-meta{font-size:0.68rem;color:var(--muted);font-family:"DM Mono",monospace;}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:26px;}
+.stat-card{background:var(--ink2);border:1px solid var(--border);border-radius:11px;padding:18px 20px;position:relative;overflow:hidden;transition:border-color 0.2s,transform 0.2s;cursor:default;}
+.stat-card:hover{border-color:rgba(200,69,26,0.35);transform:translateY(-2px);}
+.stat-card::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:0;transition:opacity 0.2s;}
+.stat-card:hover::before{opacity:1;}
+.stat-lbl{font-size:0.68rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--muted);margin-bottom:9px;}
+.stat-val{font-family:"DM Mono",monospace;font-size:1.75rem;font-weight:500;color:var(--paper);line-height:1;margin-bottom:7px;}
+.stat-val.c-safe{color:var(--safe);}
+.stat-val.c-warn{color:var(--warn);}
+.stat-val.c-accent{color:var(--accent);}
+.stat-delta{font-size:0.68rem;color:var(--muted);}
+.stat-ico{position:absolute;right:16px;top:14px;font-size:1.5rem;opacity:0.12;}
+.main-grid{display:grid;grid-template-columns:1fr 360px;gap:18px;margin-bottom:22px;}
+.card{background:var(--ink2);border:1px solid var(--border);border-radius:13px;overflow:hidden;}
+.card-hdr{padding:16px 20px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.card-title{font-weight:600;font-size:0.88rem;color:var(--paper);}
+.card-act{font-size:0.7rem;color:var(--accent);cursor:pointer;font-weight:500;text-decoration:none;}
+.card-act:hover{text-decoration:underline;}
+.card-body{padding:18px 20px;}
+.search-row{display:flex;gap:9px;margin-bottom:16px;}
+.s-input{flex:1;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:7px;padding:9px 14px;color:var(--paper);font-family:"Instrument Sans",sans-serif;font-size:0.82rem;outline:none;transition:border-color 0.18s;}
+.s-input:focus{border-color:var(--accent);}
+.s-input::placeholder{color:var(--muted);}
+.s-btn{background:var(--accent);border:none;border-radius:7px;padding:9px 18px;color:#fff;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:"Instrument Sans",sans-serif;transition:background 0.15s;}
+.s-btn:hover{background:#a83716;}
+.tbl-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:0.8rem;}
+thead th{text-align:left;padding:9px 12px;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--muted);border-bottom:1px solid rgba(255,255,255,0.06);white-space:nowrap;}
+tbody tr{border-bottom:1px solid rgba(255,255,255,0.04);transition:background 0.12s;}
+tbody tr:hover{background:rgba(255,255,255,0.025);}
+tbody td{padding:10px 12px;color:rgba(240,236,226,0.78);vertical-align:middle;}
+.mono{font-family:"DM Mono",monospace;font-size:0.73rem;color:var(--muted);}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:0.65rem;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;}
+.b-ok{background:rgba(34,197,94,0.15);color:#4ade80;border:1px solid rgba(74,222,128,0.18);}
+.b-warn{background:rgba(245,158,11,0.12);color:#fbbf24;border:1px solid rgba(251,191,36,0.18);}
+.b-err{background:rgba(200,69,26,0.15);color:#f87171;border:1px solid rgba(248,113,113,0.18);}
+.badge-dot{width:5px;height:5px;border-radius:50%;background:currentColor;}
+.corr-box{margin-top:12px;padding:11px 13px;background:rgba(200,69,26,0.06);border-radius:7px;border:1px solid rgba(200,69,26,0.18);}
+.corr-box p{font-size:0.73rem;color:rgba(240,236,226,0.65);line-height:1.5;}
+.corr-box strong{color:var(--accent);}
+.pipeline{display:flex;flex-direction:column;}
+.pipe-step{display:flex;gap:14px;}
+.pipe-left{display:flex;flex-direction:column;align-items:center;width:34px;flex-shrink:0;}
+.pipe-node{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:"DM Mono",monospace;font-size:0.72rem;font-weight:700;flex-shrink:0;position:relative;z-index:1;}
+.pn-done{background:rgba(34,197,94,0.15);border:2px solid #22c55e;color:#4ade80;}
+.pn-active{background:rgba(200,69,26,0.15);border:2px solid var(--accent);color:var(--accent);animation:npulse 2s infinite;}
+.pn-pend{background:rgba(245,158,11,0.1);border:2px solid var(--warn);color:#fbbf24;}
+.pn-wait{background:rgba(255,255,255,0.04);border:2px solid rgba(255,255,255,0.08);color:var(--muted);}
+@keyframes npulse{0%,100%{box-shadow:0 0 0 0 rgba(200,69,26,0.4);}50%{box-shadow:0 0 0 7px rgba(200,69,26,0);}}
+.pipe-line{width:2px;flex:1;min-height:18px;margin:0 auto;}
+.pl-done{background:#22c55e;}
+.pl-active{background:linear-gradient(to bottom,#22c55e,var(--accent));}
+.pl-off{background:rgba(255,255,255,0.06);}
+.pipe-content{padding-bottom:20px;flex:1;}
+.pc-title{font-weight:600;font-size:0.82rem;color:var(--paper);margin-bottom:2px;}
+.pc-desc{font-size:0.72rem;color:var(--muted);line-height:1.5;}
+.pc-tag{display:inline-block;margin-top:4px;font-size:0.62rem;font-family:"DM Mono",monospace;padding:2px 7px;border-radius:4px;background:rgba(255,255,255,0.04);color:var(--muted);border:1px solid rgba(255,255,255,0.07);}
+.sec-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:22px;}
+.kbar-chart{display:flex;align-items:flex-end;height:150px;border-bottom:1px solid rgba(255,255,255,0.08);gap:0;}
+.kbar-grp{flex:1;display:flex;align-items:flex-end;justify-content:center;height:100%;gap:2px;position:relative;}
+.kb{border-radius:3px 3px 0 0;position:relative;transition:height 1.2s cubic-bezier(0.4,0,0.2,1);}
+.kb:hover .kbt{opacity:1;}
+.kbt{position:absolute;top:-20px;left:50%;transform:translateX(-50%);font-size:0.58rem;font-family:"DM Mono",monospace;white-space:nowrap;color:var(--paper);background:rgba(20,32,46,0.95);padding:2px 5px;border-radius:3px;opacity:0;transition:opacity 0.15s;pointer-events:none;}
+.kb-rasio{background:linear-gradient(to top,#1a7a4a,#4ade80);}
+.kb-miskin{background:linear-gradient(to top,#7a1e0a,#c8451a);}
+.kbar-labels{display:flex;margin-top:3px;}
+.kbl{flex:1;text-align:center;font-size:0.56rem;color:var(--muted);padding:0 1px;}
+.chart-legend{display:flex;gap:14px;margin-top:10px;font-size:0.7rem;color:var(--muted);}
+.leg-dot{width:8px;height:8px;border-radius:2px;display:inline-block;margin-right:4px;vertical-align:middle;}
+.note-box{margin-top:10px;padding:9px 11px;background:rgba(255,255,255,0.03);border-radius:6px;border:1px solid rgba(255,255,255,0.05);font-size:0.7rem;color:var(--muted);line-height:1.5;}
+.alert-list{display:flex;flex-direction:column;gap:9px;}
+.al-item{display:flex;gap:11px;padding:11px 13px;border-radius:7px;background:rgba(255,255,255,0.025);border:1px solid rgba(255,255,255,0.06);cursor:pointer;transition:border-color 0.15s;}
+.al-item:hover{border-color:rgba(200,69,26,0.28);}
+.al-err{border-left:3px solid var(--accent);}
+.al-warn{border-left:3px solid var(--warn);}
+.al-ok{border-left:3px solid var(--safe);}
+.al-ico{font-size:1rem;flex-shrink:0;margin-top:1px;}
+.al-body{flex:1;}
+.al-title{font-size:0.8rem;font-weight:600;color:var(--paper);margin-bottom:2px;}
+.al-desc{font-size:0.7rem;color:var(--muted);line-height:1.4;}
+.al-time{font-size:0.62rem;font-family:"DM Mono",monospace;color:var(--muted);flex-shrink:0;}
+.bar-chart-area{display:flex;flex-direction:column;gap:10px;}
+.bc-row{display:flex;align-items:center;gap:9px;font-size:0.75rem;}
+.bc-lbl{width:120px;color:rgba(240,236,226,0.65);flex-shrink:0;font-size:0.72rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.bc-wrap{flex:1;height:21px;background:rgba(255,255,255,0.04);border-radius:3px;overflow:hidden;}
+.bc-bar{height:100%;border-radius:3px;display:flex;align-items:center;padding-left:7px;font-size:0.65rem;font-family:"DM Mono",monospace;color:rgba(255,255,255,0.85);font-weight:500;transition:width 1.4s cubic-bezier(0.4,0,0.2,1);}
+.bc-ok{background:linear-gradient(90deg,#1a7a4a,#22c55e);}
+.bc-pend{background:linear-gradient(90deg,#8a5a0a,#f59e0b);}
+.bc-rej{background:linear-gradient(90deg,#7a1e0a,#c8451a);}
+.bc-num{width:38px;text-align:right;font-family:"DM Mono",monospace;font-size:0.68rem;color:var(--muted);flex-shrink:0;}
+.div-sep{height:1px;background:rgba(255,255,255,0.05);margin:5px 0;}
+.page-foot{text-align:center;padding:18px 0 6px;font-size:0.68rem;color:rgba(255,255,255,0.18);font-family:"DM Mono",monospace;border-top:1px solid rgba(255,255,255,0.05);}
+.watermark{position:fixed;bottom:18px;right:22px;font-size:0.62rem;color:rgba(255,255,255,0.12);font-family:"DM Mono",monospace;text-align:right;line-height:1.6;pointer-events:none;z-index:200;}
+.watermark strong{display:block;color:rgba(255,255,255,0.22);}
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);border-radius:2px;}
+</style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="brand-area">
+    <div class="brand-row">
+      <div class="brand-icon">S</div>
+      <div class="brand-name">SITRA-PIP</div>
+    </div>
+    <div class="brand-sub">Sistem Integritas &amp; Keterlacakan<br>Bantuan Pendidikan · Jawa Timur</div>
+  </div>
+  <nav class="nav">
+    <div class="nav-section">Navigasi Utama</div>
+    <a href="dashboard.html" class="nav-item active"><span>📊</span> Dashboard</a>
+    <a href="integrasi.html" class="nav-item"><span>🔗</span> Alur Integrasi Data</a>
+    <a href="audit.html" class="nav-item"><span>📋</span> Audit Trail &amp; Log <span class="nav-badge">12</span></a>
+    <div class="nav-section" style="margin-top:10px;">Sumber Data</div>
+    <a href="#" class="nav-item"><span>🏛️</span> Verifikasi Dapodik</a>
+    <a href="#" class="nav-item"><span>🪪</span> Validasi Dukcapil</a>
+    <a href="#" class="nav-item"><span>💰</span> Data Kesejahteraan</a>
+    <a href="#" class="nav-item"><span>🏦</span> Bank Penyalur</a>
+    <div class="nav-section" style="margin-top:10px;">Manajemen</div>
+    <a href="#" class="nav-item"><span>⚙️</span> Exception Override</a>
+    <a href="#" class="nav-item"><span>📤</span> Mekanisme Banding</a>
+  </nav>
+  <div class="sidebar-foot">
+    <strong>© 2025 Muhammad Setio Budi</strong>
+    Universitas Mayjen Sungkono<br>
+    Prodi Manajemen · Mojokerto<br>
+    <span style="color:rgba(255,255,255,0.18);display:block;margin-top:2px;">Penelitian Akademik · Simulasi</span>
+  </div>
+</aside>
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <span class="tb-title">Dashboard Monitoring</span>
+      <span class="tb-crumb">SITRA-PIP / dashboard / overview</span>
+    </div>
+    <div class="topbar-right">
+      <div class="sys-pill"><div class="sys-dot"></div>Sistem Aktif</div>
+      <div class="time-display" id="liveTime">--:--:--</div>
+    </div>
+  </div>
+  <div class="content">
+    <div class="disclaimer">
+      <span style="font-size:1rem;flex-shrink:0;margin-top:1px;">⚠️</span>
+      <p class="disc-p"><strong>DISCLAIMER:</strong> Prototype ini dikembangkan untuk tujuan penelitian akademik dan simulasi konseptual. Seluruh data yang ditampilkan merupakan <strong>data simulasi</strong> yang tidak merepresentasikan data individu nyata. Bukan sistem resmi pemerintah dan tidak terhubung dengan database instansi mana pun.</p>
+    </div>
+    <div class="sec-hdr">
+      <span class="sec-title">Ringkasan Nasional PIP 2025</span>
+      <div class="sec-line"></div>
+      <span class="sec-meta">Jawa Timur · 38 Kab/Kota</span>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-card"><span class="stat-ico">🎓</span><div class="stat-lbl">Total Ditandai Layak</div><div class="stat-val">26,28<span style="font-size:.95rem"> jt</span></div><div class="stat-delta">Nasional 2025 · Sidata PIP</div></div>
+      <div class="stat-card"><span class="stat-ico">✅</span><div class="stat-lbl">Penerima Terverifikasi</div><div class="stat-val c-safe">22,60<span style="font-size:.95rem"> jt</span></div><div class="stat-delta">85,99% dari total sasaran</div></div>
+      <div class="stat-card"><span class="stat-ico">⏳</span><div class="stat-lbl">Status Pending / Koreksi</div><div class="stat-val c-warn">0,24<span style="font-size:.95rem"> jt</span></div><div class="stat-delta">Menunggu klarifikasi data</div></div>
+      <div class="stat-card"><span class="stat-ico">🚫</span><div class="stat-lbl">Ditolak SiPintar</div><div class="stat-val c-accent">3,68<span style="font-size:.95rem"> jt</span></div><div class="stat-delta">14,01% · Eksklusi Administratif</div></div>
+    </div>
+    <div class="main-grid">
+      <div class="card">
+        <div class="card-hdr">
+          <span class="card-title">Distribusi Penyaluran · 10 Kab/Kota Sampel Jawa Timur</span>
+          <a href="integrasi.html" class="card-act">Lihat Integrasi →</a>
+        </div>
+        <div class="card-body">
+          <div class="search-row">
+            <input class="s-input" type="text" placeholder="Cari nama wilayah..." id="srcInput" oninput="filterTbl()">
+            <button class="s-btn" onclick="filterTbl()">Cari</button>
+          </div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>Wilayah</th><th>Rasio</th><th>Dana (Rp)</th><th>Pddk Miskin</th><th>Status</th></tr></thead>
+              <tbody id="tblBody">
+                <tr><td>Kota Batu</td><td><span class="mono">1,55</span></td><td><span class="mono">9,6 M</span></td><td><span class="mono">6,22 rb</span></td><td><span class="badge b-ok"><span class="badge-dot"></span>Optimal</span></td></tr>
+                <tr><td>Kota Madiun</td><td><span class="mono">1,47</span></td><td><span class="mono">10,2 M</span></td><td><span class="mono">6,96 rb</span></td><td><span class="badge b-ok"><span class="badge-dot"></span>Optimal</span></td></tr>
+                <tr><td>Kota Kediri</td><td><span class="mono">1,35</span></td><td><span class="mono">24,1 M</span></td><td><span class="mono">17,93 rb</span></td><td><span class="badge b-ok"><span class="badge-dot"></span>Optimal</span></td></tr>
+                <tr><td>Kota Probolinggo</td><td><span class="mono">1,25</span></td><td><span class="mono">17,6 M</span></td><td><span class="mono">14,11 rb</span></td><td><span class="badge b-ok"><span class="badge-dot"></span>Optimal</span></td></tr>
+                <tr><td>Kota Malang</td><td><span class="mono">1,23</span></td><td><span class="mono">42,3 M</span></td><td><span class="mono">34,41 rb</span></td><td><span class="badge b-ok"><span class="badge-dot"></span>Optimal</span></td></tr>
+                <tr><td>Kab. Bangkalan</td><td><span class="mono" style="color:#fbbf24">0,28</span></td><td><span class="mono">51,9 M</span></td><td><span class="mono">187,9 rb</span></td><td><span class="badge b-warn"><span class="badge-dot"></span>Timpang</span></td></tr>
+                <tr><td>Kab. Tuban</td><td><span class="mono" style="color:#fbbf24">0,25</span></td><td><span class="mono">42,8 M</span></td><td><span class="mono">168,9 rb</span></td><td><span class="badge b-warn"><span class="badge-dot"></span>Timpang</span></td></tr>
+                <tr><td>Kab. Probolinggo</td><td><span class="mono" style="color:#f87171">0,22</span></td><td><span class="mono">43,3 M</span></td><td><span class="mono">196,3 rb</span></td><td><span class="badge b-err"><span class="badge-dot"></span>Kritis</span></td></tr>
+                <tr><td>Kab. Sampang</td><td><span class="mono" style="color:#f87171">0,18</span></td><td><span class="mono">39,2 M</span></td><td><span class="mono">214,0 rb</span></td><td><span class="badge b-err"><span class="badge-dot"></span>Kritis</span></td></tr>
+                <tr><td>Kab. Sumenep</td><td><span class="mono" style="color:#f87171">0,15</span></td><td><span class="mono">29,1 M</span></td><td><span class="mono">188,5 rb</span></td><td><span class="badge b-err"><span class="badge-dot"></span>Kritis</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="corr-box"><p><strong>Korelasi Pearson r = −0,99</strong> — Hubungan negatif sangat kuat antara jumlah penduduk miskin dan rasio penerima bantuan. Wilayah dengan kemiskinan tertinggi memiliki rasio penerima terendah. Data: Tabel 1 Penelitian Muhammad Setio Budi (2025).</p></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hdr">
+          <span class="card-title">Pipeline Verifikasi SITRA</span>
+          <a href="integrasi.html" class="card-act">Detail →</a>
+        </div>
+        <div class="card-body">
+          <div class="pipeline">
+            <div class="pipe-step"><div class="pipe-left"><div class="pipe-node pn-done">1</div><div class="pipe-line pl-done"></div></div><div class="pipe-content"><div class="pc-title">Input Data Dapodik</div><div class="pc-desc">Satuan pendidikan menginput data siswa. Setiap perubahan wajib disertai timestamp dan identitas pengubah.</div><span class="pc-tag">Dapodik · Pusdatin</span></div></div>
+            <div class="pipe-step"><div class="pipe-left"><div class="pipe-node pn-done">2</div><div class="pipe-line pl-active"></div></div><div class="pipe-content"><div class="pc-title">Validasi Identitas Dukcapil</div><div class="pc-desc">NIK/NISN divalidasi lintas sistem. Ketidaksesuaian ejaan membuka status <em>pending</em> — bukan penolakan otomatis.</div><span class="pc-tag">Dukcapil · Verifikasi NIK</span></div></div>
+            <div class="pipe-step"><div class="pipe-left"><div class="pipe-node pn-active">3</div><div class="pipe-line pl-off"></div></div><div class="pipe-content"><div class="pc-title">Decision Engine SITRA</div><div class="pc-desc">Menghasilkan tiga status: <strong style="color:#4ade80">Eligible</strong>, <strong style="color:#fbbf24">Pending</strong>, atau <strong style="color:#f87171">Reject Final</strong> — dengan log alasan yang tercatat.</div><span class="pc-tag">Pending → Koreksi → Final</span></div></div>
+            <div class="pipe-step"><div class="pipe-left"><div class="pipe-node pn-pend">4</div><div class="pipe-line pl-off"></div></div><div class="pipe-content"><div class="pc-title">Mekanisme Koreksi &amp; Banding</div><div class="pc-desc">Siswa/sekolah dapat mengajukan koreksi dalam jendela waktu yang ditetapkan dengan dokumen administratif resmi.</div><span class="pc-tag">Hak Banding · Batas Waktu Koreksi</span></div></div>
+            <div class="pipe-step"><div class="pipe-left"><div class="pipe-node pn-wait">5</div><div class="pipe-line pl-off"></div></div><div class="pipe-content"><div class="pc-title">Trigger Bank Penyalur</div><div class="pc-desc">Dipicu hanya setelah konsistensi identitas dan data ekonomi terkonfirmasi penuh oleh SITRA Core.</div><span class="pc-tag">Bank Penyalur · Pencairan</span></div></div>
+            <div class="pipe-step"><div class="pipe-left"><div class="pipe-node pn-wait">6</div></div><div class="pipe-content"><div class="pc-title">Audit Trail Final</div><div class="pc-desc">Seluruh keputusan tersimpan dalam log immutable (ISO 15489-1:2016). Dapat diakses oleh siswa, sekolah, dinas, dan auditor.</div><span class="pc-tag">Immutable Log · Audit</span></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="sec-grid">
+      <div class="card">
+        <div class="card-hdr"><span class="card-title">Visualisasi Ketimpangan · Rasio vs Kemiskinan</span></div>
+        <div class="card-body">
+          <div class="kbar-chart" id="ktChart"></div>
+          <div class="kbar-labels" id="ktLabels"></div>
+          <div class="chart-legend">
+            <span><span class="leg-dot" style="background:#4ade80"></span>Rasio Penerima (×10)</span>
+            <span><span class="leg-dot" style="background:#c8451a"></span>Pddk Miskin (rb ÷30)</span>
+          </div>
+          <div class="note-box">Lima kota (kiri) rasio tertinggi vs lima kabupaten (kanan) rasio terendah. Korelasi negatif r = −0,99 mengindikasikan salah sasaran sistemik dalam distribusi PIP 2025.</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hdr"><span class="card-title">Notifikasi &amp; Anomali Sistem</span><a href="audit.html" class="card-act">Semua Log →</a></div>
+        <div class="card-body">
+          <div class="alert-list">
+            <div class="al-item al-err"><span class="al-ico">🚨</span><div class="al-body"><div class="al-title">Ketidaksesuaian NIK Masif</div><div class="al-desc">3.685.321 entri ditolak akibat NIK/NISN tidak sinkron dengan Dukcapil. Memerlukan tindakan koreksi batch segera.</div></div><span class="al-time">Hari ini</span></div>
+            <div class="al-item al-warn"><span class="al-ico">⚠️</span><div class="al-body"><div class="al-title">Status Pending: Kab. Sumenep</div><div class="al-desc">247 siswa menunggu klarifikasi identitas. Batas waktu koreksi tersisa 7 hari.</div></div><span class="al-time">2j lalu</span></div>
+            <div class="al-item al-warn"><span class="al-ico">🏦</span><div class="al-body"><div class="al-title">Rekening Tidak Aktif Terdeteksi</div><div class="al-desc">89 rekening bank penyalur gagal digunakan meskipun sistem mencatat penyaluran berhasil.</div></div><span class="al-time">5j lalu</span></div>
+            <div class="al-item al-ok"><span class="al-ico">✅</span><div class="al-body"><div class="al-title">Batch Koreksi Selesai</div><div class="al-desc">124 entri pending berhasil dikoreksi dan diperbarui menjadi status Eligible.</div></div><span class="al-time">1h lalu</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:22px;">
+      <div class="card-hdr"><span class="card-title">Distribusi Keputusan SITRA Decision Engine · Simulasi per Kategori Wilayah</span></div>
+      <div class="card-body">
+        <div class="bar-chart-area">
+          <div class="bc-row"><span class="bc-lbl">Kota · Eligible</span><div class="bc-wrap"><div class="bc-bar bc-ok" style="width:82%">Eligible 82%</div></div><span class="bc-num">82%</span></div>
+          <div class="bc-row"><span class="bc-lbl">Kota · Pending</span><div class="bc-wrap"><div class="bc-bar bc-pend" style="width:11%">Pending 11%</div></div><span class="bc-num">11%</span></div>
+          <div class="bc-row"><span class="bc-lbl">Kota · Reject</span><div class="bc-wrap"><div class="bc-bar bc-rej" style="width:7%">Reject 7%</div></div><span class="bc-num">7%</span></div>
+          <div class="div-sep"></div>
+          <div class="bc-row"><span class="bc-lbl">Kabupaten · Eligible</span><div class="bc-wrap"><div class="bc-bar bc-ok" style="width:44%">Eligible 44%</div></div><span class="bc-num">44%</span></div>
+          <div class="bc-row"><span class="bc-lbl">Kabupaten · Pending</span><div class="bc-wrap"><div class="bc-bar bc-pend" style="width:28%">Pending 28%</div></div><span class="bc-num">28%</span></div>
+          <div class="bc-row"><span class="bc-lbl">Kabupaten · Reject</span><div class="bc-wrap"><div class="bc-bar bc-rej" style="width:28%">Reject 28%</div></div><span class="bc-num">28%</span></div>
+        </div>
+        <div class="note-box" style="margin-top:14px;">Data simulasi menggambarkan perbedaan hasil verifikasi antara wilayah kota (kapasitas administratif tinggi) vs kabupaten (kapasitas terbatas). SITRA dirancang meminimalkan kesenjangan ini melalui mekanisme pending dan koreksi terstruktur.</div>
+      </div>
+    </div>
+    <div class="page-foot">SITRA-PIP Prototype · Penelitian Akademik · © 2025 Muhammad Setio Budi · Universitas Mayjen Sungkono Mojokerto · Data Simulasi — Bukan Sistem Resmi Pemerintah</div>
+  </div>
+</main>
+<div class="watermark"><strong>© Muhammad Setio Budi</strong>Univ. Mayjen Sungkono · 2025<br>Prodi Manajemen · Simulasi</div>
+<script>
+function updateTime(){const n=new Date();document.getElementById("liveTime").textContent=n.toLocaleTimeString("id-ID",{hour:"2-digit",minute:"2-digit",second:"2-digit"})+" WIB";}
+setInterval(updateTime,1000);updateTime();
+function filterTbl(){const q=document.getElementById("srcInput").value.toLowerCase();document.querySelectorAll("#tblBody tr").forEach(r=>{r.style.display=r.textContent.toLowerCase().includes(q)?"":""});document.querySelectorAll("#tblBody tr").forEach(r=>{r.style.display=r.textContent.toLowerCase().includes(q)?"":"none"});}
+const ktData=[{l:"Kota Batu",r:1.55,m:6.22},{l:"Kota Madiun",r:1.47,m:6.96},{l:"Kota Kediri",r:1.35,m:17.93},{l:"Kota Probolinggo",r:1.25,m:14.11},{l:"Kota Malang",r:1.23,m:34.41},{l:"Kab. Bangkalan",r:0.28,m:187.9},{l:"Kab. Tuban",r:0.25,m:168.86},{l:"Kab. Probolinggo",r:0.22,m:196.26},{l:"Kab. Sampang",r:0.18,m:213.98},{l:"Kab. Sumenep",r:0.15,m:188.48}];
+const maxM=213.98,maxR=1.55,chart=document.getElementById("ktChart"),labels=document.getElementById("ktLabels");
+ktData.forEach(d=>{const g=document.createElement("div");g.className="kbar-grp";const rH=(d.r/maxR)*135,mH=(d.m/maxM)*135;
+const rb=document.createElement("div");rb.className="kb kb-rasio";rb.style.cssText=`width:38%;height:${rH}px;`;const t1=document.createElement("div");t1.className="kbt";t1.textContent="Rasio: "+d.r;rb.appendChild(t1);
+const mb=document.createElement("div");mb.className="kb kb-miskin";mb.style.cssText=`width:38%;height:${mH}px;`;const t2=document.createElement("div");t2.className="kbt";t2.textContent=d.m+" rb";mb.appendChild(t2);
+g.appendChild(rb);g.appendChild(mb);chart.appendChild(g);
+const lbl=document.createElement("div");lbl.className="kbl";lbl.textContent=d.l.replace("Kota ","").replace("Kab. ","");labels.appendChild(lbl);});
+</script>
+</body>
+</html>
